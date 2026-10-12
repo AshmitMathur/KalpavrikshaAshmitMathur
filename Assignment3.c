@@ -119,7 +119,7 @@ void Input(int n, struct Student students[]){
     }
 }
 
-// Function to take output
+// Function to print output
 void Output(int n, struct Student students[]){
     for(int i=0 ; i<n ; i++){
         int total = calculateTotal(students[i].marks1, students[i].marks2, students[i].marks3);
