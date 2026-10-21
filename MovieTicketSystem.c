@@ -28,12 +28,34 @@ void output(char *name, char *Categoryname, int tickets, double subtotal, double
 double getPriceAndName(TicketCategory category, char **CategoryName);
 double calculateSubtotal(int count, double price);
 double calculateDiscount(int count, double subtotal);
+int isValidName(char *name);
+
+// Validate Name of User
+int isValidName(char *name){
+    if(name[0] == '\0') return 0;
+    int valid = 0;
+
+    for(int i=0 ; name[i] != '\0' ; i++){
+        char ch = name[i];
+
+        if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')){
+            valid = 1;
+        } else if(ch != ' ' && ch != '-'){
+            return 0;
+        }
+    }
+    return valid;
+}
 
 // Takes user Input of Name, Number of Tickets and Category
 int input(char customerName[50], int *numTickets, int *CategoryChoice){
     // scanf("%49s %d %d", customerName, numTickets, CategoryChoice);
     if(scanf("%49s %d %d", customerName, numTickets, CategoryChoice) != 3){
         printf("Invalid Input Format \n");
+        return 1;
+    }
+    if(!isValidName(customerName)){
+        printf("Error: Customer Name must contain alphabets\n");
         return 1;
     }
     if(*numTickets < MIN_TICKETS || *numTickets > MAX_TICKETS){
