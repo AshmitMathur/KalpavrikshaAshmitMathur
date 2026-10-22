@@ -1,11 +1,14 @@
 #include <stdio.h>
+// Used for Calloc and Malloc functions
 #include <stdlib.h>
-#include <string.h>
 
-
+// Constant Declaration
 #define MAX_NAME_LENGTH 100
 #define MAX_DESIGNATION_LENGTH 100
 
+// Structure Declaration
+
+// Forward Declaration of Report Node for usage in Employee Structure
 struct ReportNode;
 
 typedef struct Employee{
@@ -28,6 +31,7 @@ typedef struct EmpNode{
 
 EmpNode *allEmployees = NULL;
 
+// Function Prototypes
 void displayMenu();
 void addEmployee();
 Employee *findEmployee(int id);
@@ -41,19 +45,37 @@ void displayCompleteHierarchy();
 void displayEmployeeHierarchy();
 void displayHierarchyRecursively(Employee *employee, int level);
 void displayAllTopLevel(EmpNode *node, int *count);
+int isValidName(char *name);
+void copyString(char *dest, char *src, int maxLen);
+
+// Copies one string to another
+void copyString(char *dest, char *src, int maxLen){
+    int i = 0;
+    while(src[i] != '\0' && i < maxLen - 1){
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+}
+
+// Check for Valid Name of Employee
 int isValidName(char *name){
-    int valid = 1;
+    if(name[0] == '\0') return 0;
+    int valid = 0;
+
     for(int i=0 ; name[i] != '\0' ; i++){
         char ch = name[i];
-        if(!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ')){
-            valid = 0;
-            break;
+
+        if((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')){
+            valid = 1;
+        } else if(ch != ' ' && ch != '-'){
+            return 0;
         }
     }
     return valid;
 }
 
-
+// Finds Existing Employee based on id
 Employee* findEmployee(int id){
     EmpNode *curr = allEmployees;
     while(curr != NULL){
@@ -65,6 +87,7 @@ Employee* findEmployee(int id){
     return NULL;
 }
 
+// Adds Reporting Manager to each Employee
 void addReport(Employee *manager, Employee *report){
     ReportNode *newNode = (ReportNode*)malloc(sizeof(ReportNode));
     newNode->employee = report;
@@ -81,6 +104,7 @@ void addReport(Employee *manager, Employee *report){
     }
 }
 
+// Adds Employee
 void addEmployee(){
     int id, managerId;
     char name[MAX_NAME_LENGTH];
@@ -97,11 +121,26 @@ void addEmployee(){
 
         printf("Enter Name: ");
         fgets(name, sizeof(name), stdin);
-        name[strcspn(name, "\n")] = '\0';
+        for(int i=0 ; name[i] != '\0' ; i++){
+            if(name[i] == '\n'){
+                name[i] = '\0';
+                break;
+            }
+        }
+
+        if(!isValidName(name)){
+            printf("Error: Invalid Employee Name\n");
+            return;
+        }
 
         printf("Enter Designation: ");
         fgets(designation, sizeof(designation), stdin);
-        designation[strcspn(designation, "\n")] = '\0';
+        for(int i=0 ; designation[i] != '\0' ; i++){
+            if(designation[i] == '\n'){
+                designation[i] = '\0';
+                break;
+            }
+        }
 
         printf("Enter Reporting Manager Id: ");
         printf("\n (Enter 0 for Top Level Employee/ CEO)");
@@ -119,11 +158,16 @@ void addEmployee(){
                 printf("Error: Reporting Manager with ID %d not found\n", managerId);
                 return;
             }
+            Employee *existingEmployee = findEmployee(id);
+            if(existingEmployee != NULL && isSubordinate(existingEmployee, manager)){
+                printf("Error: Circular Reporting relationship Detected\n");
+                return;
+            }
         }
         Employee *newEmployee = (Employee*)malloc(sizeof(Employee));
         newEmployee->id = id;
-        strncpy(newEmployee-> name, name, MAX_NAME_LENGTH);
-        strncpy(newEmployee->designation, designation, MAX_DESIGNATION_LENGTH);
+        copyString(newEmployee->name, name, MAX_NAME_LENGTH);
+        copyString(newEmployee->designation, designation, MAX_DESIGNATION_LENGTH);
         newEmployee->manager = manager;
         newEmployee->reports = NULL;
 
@@ -139,6 +183,7 @@ void addEmployee(){
         printf("Employee added Successfully\n");
     }
 
+// Displays Menu for User Selection
 void displayMenu(){
     printf("\n==== EMPLOYEE HIERARCHY MANAGEMENT ====\n");
     printf("1. Add Employee\n");
@@ -149,6 +194,7 @@ void displayMenu(){
     printf("Enter Your choice: ");
 }
 
+// Removes a specific report entry from a manager's direct reports list and frees its list node
 void removeReportFromManager(Employee *manager, Employee *report){
     if(manager == NULL || manager->reports == NULL) return;
 
@@ -170,6 +216,7 @@ void removeReportFromManager(Employee *manager, Employee *report){
     }
 }
 
+// Removes Employee
 void removeEmployee(){
     int id;
     printf("Enter Employee Id to Remove: ");
@@ -178,7 +225,7 @@ void removeEmployee(){
 
     Employee *employee = findEmployee(id);
     if(employee == NULL){
-        printf("Error: Employee Id %d not found. ", id);
+        printf("Error: Employee Id %d not found. \n", id);
         return;
     }
 
@@ -216,6 +263,7 @@ void removeEmployee(){
     printf("Employee %d removed Successfully\n", id);
 }
 
+// Checks for Potential Reporting Manager
 int isSubordinate(Employee *employee, Employee *potentialManager){
     if(employee == NULL || potentialManager == NULL) return 0;
 
@@ -228,28 +276,33 @@ int isSubordinate(Employee *employee, Employee *potentialManager){
     return 0;
 }
 
+// Display Hierarchy Recursively for Employees
 void displayHierarchyRecursively(Employee *employee, int level){
     if(employee == NULL) return;
     printf("%d - %s - %s\n", employee->id, employee->name, employee->designation);
     traverseReportsList(employee->reports, level + 1);
 }
 
+// Traverses sibling node in reports list to display employee sub-tree
 void traverseReportsList(ReportNode *reportNode, int level){
     if(reportNode == NULL) return;
     displayHierarchyRecursively(reportNode->employee, level);
     traverseReportsList(reportNode->next, level);
 }
 
+// Subordinates count for a given Employee
 int countSubordinatesRecursive(Employee *employee){
     if(employee == NULL || employee->reports == NULL) return 0;
     return countSubordinatesList(employee->reports);
 }
 
+// Aggregates subordinates count across depth and breadth
 int countSubordinatesList(ReportNode *reportnode){
     if(reportnode == NULL) return 0;
     return 1 + countSubordinatesRecursive(reportnode->employee) + countSubordinatesList(reportnode->next);
 }
 
+// Searches for ID, displays reporting sub-tree and outpus total subordinates
 void displayEmployeeHierarchy(){
     int id;
     printf("Enter Employee Id: ");
@@ -266,6 +319,7 @@ void displayEmployeeHierarchy(){
     printf("Total Employees under %d: %d\n", id, countSubordinatesRecursive(employee));
 }
 
+// Traverses global list to print all top level Employees
 void displayAllTopLevel(EmpNode *node, int *count){
     if(node == NULL) return;
 
@@ -276,6 +330,7 @@ void displayAllTopLevel(EmpNode *node, int *count){
     displayAllTopLevel(node->next, count);
 }
 
+// Displays Entire Organization tree 
 void displayCompleteHierarchy(){
     if(allEmployees == NULL){
         printf("No Employees in the organization\n");
