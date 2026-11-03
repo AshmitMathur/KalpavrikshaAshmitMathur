@@ -21,17 +21,20 @@ void reverseRows(int *mat, int size);
 // Safely reads matrix size between MIN_SIZE and MAX_SIZE
 int readMatrixSize(){
     int size, result, ch;
+    char nextChar;
 
     while(1){
         printf("Enter Matrix Size (%d-%d): ", MIN_SIZE, MAX_SIZE);
-        result = scanf("%d", &size);
+        result = scanf("%d%c", &size, &nextChar);
 
         if(result == EOF) exit(1);
-        if(result == 1 && size >= MIN_SIZE && size <= MAX_SIZE) return size;
+        if(result == 2 && size >= MIN_SIZE && size <= MAX_SIZE
+        && nextChar == '\n') return size;
 
         printf("Invalid Input.");
-        while(((ch = getchar()) != '\n') && ch != EOF);
-        if(ch == EOF) exit(1);
+        if(nextChar != '\n'){
+            while(((ch = getchar()) != '\n') && ch != EOF);
+        }
     }
 }
 
@@ -129,8 +132,13 @@ int averageAround(int *matrix, int size, int *previous, int *current, int row, i
 }
 
 int main(){
-    int matrix[MAX_SIZE * MAX_SIZE];
     int size = readMatrixSize();
+    int *matrix = (int *)malloc(size * size * sizeof(int));
+
+    if(matrix == NULL){
+        printf("Memory Allocation failed\n");
+        return 1;
+    }
 
     generateMatrix(matrix, size);
 
@@ -144,6 +152,8 @@ int main(){
 
     printf("\nMatrix after Applying 3x3 Smoothing Filtering:\n");
     displayMatrix(matrix, size);
+
+    free(matrix);
 
     return 0;
 }
