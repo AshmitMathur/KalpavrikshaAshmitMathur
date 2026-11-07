@@ -43,18 +43,31 @@ void displayMemory(MemoryManager *memory);
 void displayMap(MemoryManager *memory);
 void resizeAllocation(MemoryManager *memory);
 void displayMenu();
+int clearBuffer();
+
+// Clear Input Buffer at the end of File
+int clearBuffer(){
+    int ch;
+    while((ch = getchar()) != '\n' && ch != EOF);
+    return ch;
+}
 
 // Function to read Integer Safely
 int readInt(char *input){
-    int val, ch;
+    int val;
     while(1){
         if(input) printf("%s", input);
-        if(scanf("%d", &val) == 1){
-            while((ch = getchar()) != '\n' && ch != EOF);
+        int readCount = scanf("%d", &val);
+
+        if(readCount == 1){
+            clearBuffer();
             return val;
+        } else if(readCount == EOF || clearBuffer() == EOF){
+            printf("\n End of File reached\n");
+            exit(0);
+        } else{
+            printf("Invalid input. Enter valid number\n");
         }
-        while((ch = getchar()) != '\n' && ch != EOF);
-        printf("Invalid input. Please enter a valid Number");
     }
 }
 
@@ -62,12 +75,13 @@ int readInt(char *input){
 void insertBlock(MemoryManager *memory, int index, Block b){
     if(memory->blockCount >= memory->capacity){
         memory->capacity *= 2;
-        memory->blocks = realloc(memory->blocks, memory->capacity * sizeof(Block));
-
-        if(!memory->blocks){
-            printf("Netadata reallocation failed. \n");
+        Block *temp = realloc(memory->blocks, memory->capacity * sizeof(Block));
+        if(temp == NULL){
+            printf("Memory Allocation failed. \n");
+            free(memory->blocks);
             exit(1);
         }
+        memory->blocks = temp;
     }
 
     for(int i=memory->blockCount; i > index ; i--){
