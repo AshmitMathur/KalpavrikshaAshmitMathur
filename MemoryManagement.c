@@ -53,8 +53,6 @@ int clearBuffer(){
 }
 
 // Function to read Integer Safely
-// Make sure Input like 123abc are not accepted as non numeric part is present in input.
-
 int readInt(char *input){
     int val;
     while(1){
@@ -74,7 +72,6 @@ int readInt(char *input){
 }
 
 // Insert Block and reallocate memory
-// We can increase the memory capacity by multiplying sizeof(Block) before realloc
 void insertBlock(MemoryManager *memory, int index, Block b){
     if(memory->blockCount >= memory->capacity){
         memory->capacity *= 2;
@@ -104,7 +101,6 @@ void removeBlock(MemoryManager *memory, int index){
 }
 
 // Merges adjacent free blocks into a single block to prevent fragmentation
-// Need to add memory freeing space where the size of free memory is lesser than block size.
 void mergedFreeBlocks(MemoryManager *memory){
     int i=0;
     while(i < memory->blockCount - 1){
